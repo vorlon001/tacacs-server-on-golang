@@ -1,5 +1,5 @@
 # tacacs-server
-example ttacacs server on golang
+example tacacs server on golang
 
 Seample tacacs server on GoLang
  - build and testing  on 1.14.4
