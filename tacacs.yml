@@ -1,0 +1,95 @@
+PID: /tmp/tacacs.pid
+BIND: 0.0.0.0
+PORT: 49
+LOG:
+  DEBUG:
+      ENABLE: TRUE
+  SYSLOG:
+      ENABLE: TRUE
+      IP: 127.0.0.1 #IP if  line not  by DEFAULT send to system syslog w/o ip
+      PORT: 514
+  FILE:
+      NAME: tacacs.log
+LDAP: # LDAP SERVER CONFIG
+
+                Base:         "dc=example,dc=com",
+                Host:         "ldap.example.com",
+                Port:         389,
+                UseSSL:       false,
+                BindDN:       "uid=readonlysuer,ou=People,dc=example,dc=com",
+                BindPassword: "readonlypassword",
+                UserFilter:   "(uid=%s)",
+                GroupFilter:  "(memberUid=%s)",
+                Attributes:   []string{"givenName", "sn", "mail", "uid"},
+
+  Base:         DC=example,DC=com
+  Host:         ldap.example.com
+  Port:         389
+  UseSSL:       FALSE
+  BindDN:       UID=readonlysuer,OU=People,DC=example,DC=com
+  BindPassword: readonlypassword
+  UserFilter:   (&(objectClass=user)(objectClass=person)(sAMAccountName=%s)(memberOf=CN=ADMIN,OU=TACACS,DC=example,DC=com))
+  GroupFilter:  (memberUid=%s)
+  Attributes:   
+    - cn
+    - mail
+    - memberOf
+    - mobile
+    - postOfficeBox
+    - ipPhone
+    - mail
+    - userPrincipalName
+    - displayName
+ACCESS: # ACCESS for LDAP USERS 
+    - Base: OU=TACACS,DC=example,DC=com
+      Group: VIEW #CN=VIEW,OU=TACACS,DC=example,DC=com
+      priv-lvl: 1
+      description: "Description  user accesss level 1"
+      access:
+        - 10.1.0.0/24
+        - 10.2.0.0/16
+        - 10.3.0.0/16
+    - Base: OU=TACACS,DC=example,DC=com
+      Group: ADMIN
+      priv-lvl: 15
+      description: "Description  user accesss level 15 limits"
+      PERMIT:
+        - "telnet"
+        - "configure"
+        - "show"
+      IPAccess:
+        - 10.1.0.0/24
+        - 10.2.0.0/16
+        - 10.3.0.0/16
+    - Base: OU=TACACS,DC=example,DC=com
+      Group: SUPERADMIN
+      priv-lvl: 15
+      description: "Description  user accesss level 15 Full"
+banner:
+  login_banner: "\nTRESPASSERS W. ( C ) Winnie-the-Pooh\nLDAP LOGIN:"
+  password_banner: "LDAP PASSWORD:"
+  banner: "WELCOME!"
+  banner_accept: "ACCESS ACCEPT"
+  banner_reject: "ACCESS DENY NETWORK"
+DEVICE:
+  - network: 10.1.0.0/24
+    token: privatekey1
+  - network: 10.2.0.0/24
+    token: privatekey2
+  - network: 10.3.0.0/24
+    token: privatekey3
+  - network: 0.0.0.0/0
+    token: privatekey4
+USER: # if need
+  - login: vorlon
+    password: Fenix@TEST
+    priv-lvl: 15
+    description: "Description  user accesss"
+    IPAccess: 
+      - 10.1.0.0/24
+      - 10.2.0.0/24
+      - 10.3.0.0/24
+    PERMIT:
+      - "telnet"
+      - "configure"
+      - "show"
