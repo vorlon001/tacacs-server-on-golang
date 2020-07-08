@@ -290,7 +290,7 @@ func reloadHandler(sig os.Signal) error {
 	config.PID = "RELOADED"
         log.Println(">>",config,os.Getpid(),get_pig_daemon(PidFileName))
 
-        cfg, config_err := configure.NewConfig("./daemon_6.yml")
+        cfg, config_err := configure.NewConfig("./tacacs.yml")
         if config_err != nil {
             log.Fatalf("ERROR LOAD CONFIG: %s", config_err.Error())
         } else {

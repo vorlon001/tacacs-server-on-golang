@@ -19,11 +19,23 @@ type tacasHandler struct{
 }
 
 func (t tacasHandler) HandleAuthenStart(ctx context.Context, a *tacplus.AuthenStart, s *tacplus.ServerSession) *tacplus.AuthenReply {
+
+  ip_req_full := get_ip(s.RemoteAddr().String())
+  var ip_req string
+  if len(ip_req_full) > 0 {
+        ip_req = ip_req_full[0]
+  } else {
+        log.Println("Replying... ACCES DENY", tacplus.AuthenStatusFail)
+        log.Println("INTERNAL ERROR NUMBER 100")
+        return &tacplus.AuthenReply{Status: tacplus.AuthenStatusFail, ServerMsg: "INTERNAL ERROR NUMBER 100"};
+  }
+
   if t.Config.LOG.DEBUG.ENABLE==true {
      log.Println("HandleAuthenStart\n")
   }
-
-  log.Println(s.RemoteAddr(),s.LocalAddr(),t.Config.PID)
+  if t.Config.LOG.DEBUG.ENABLE==true {
+     log.Println(s.RemoteAddr(),s.LocalAddr(),t.Config.PID,a.Data,string(a.Data))
+  }
   user := a.User
   for user == "" {
     if t.Config.LOG.DEBUG.ENABLE==true {
@@ -48,7 +60,7 @@ func (t tacasHandler) HandleAuthenStart(ctx context.Context, a *tacplus.AuthenSt
     pass = c.Message
   }
 
-  log.Printf("Got: %s:<REMOVED> %v %v \n", user,s.RemoteAddr(),s.LocalAddr())
+  log.Printf("Got: %s:<REMOVED> s.RemoteAddr():%v s.LocalAddr()%v a.RemAddr():%v \n", user,get_ip(s.RemoteAddr().String()),get_ip(s.LocalAddr().String()), a.RemAddr)
 
   if access:=auth(user, pass,t.Config);access!=interface{}(nil) {
 
@@ -73,8 +85,10 @@ func (t tacasHandler) HandleAuthenStart(ctx context.Context, a *tacplus.AuthenSt
         return &tacplus.AuthenReply{Status: tacplus.AuthenStatusFail, ServerMsg: "INTERNAL ERROR NUMBER 102"};
     case configure.UserLDAP:
         acs := access.(configure.UserLDAP);
-        if Verify_Ip_Access(acs.IPAccess, a.RemAddr )==false {
+        remoteipv4 := get_ip(a.RemAddr);
+        if Verify_Ip_Access(acs.IPAccess, remoteipv4[0] )==false {
           log.Println("Replying... ACCES DENY", tacplus.AuthenStatusFail)
+          log.Println("Replying... ACCES DENY IP:", acs.IPAccess, a.RemAddr)
           log.Println("INTERNAL ERROR NUMBER 110")
           return &tacplus.AuthenReply{Status: tacplus.AuthenStatusFail, ServerMsg: "ACCESS DENY. POINT 110"};
         }
@@ -88,16 +102,18 @@ func (t tacasHandler) HandleAuthenStart(ctx context.Context, a *tacplus.AuthenSt
           log.Println("Replying... ACCESS PERMIT", acs.PERMIT)
         }
 
-        if _, ok := t.UserCached["127.0.0.1"]; ok {
-             t.UserCached["127.0.0.1"][user] = acs  //s.LocalAddr()
+        if _, ok := t.UserCached[ip_req]; ok {
+             t.UserCached[ip_req][user] = acs  //s.LocalAddr()
         }else {
-             t.UserCached["127.0.0.1"] = tacasUserCachedNode{}
-             t.UserCached["127.0.0.1"][user] = acs
+             t.UserCached[ip_req] = tacasUserCachedNode{}
+             t.UserCached[ip_req][user] = acs
         }
     case configure.User:
         acs := access.(configure.User)
-        if Verify_Ip_Access(acs.IPAccess, a.RemAddr )==false {
+        remoteipv4 := get_ip(a.RemAddr);
+        if Verify_Ip_Access(acs.IPAccess, remoteipv4[0] )==false {
           log.Println("Replying... ACCES DENY", tacplus.AuthenStatusFail)
+          log.Println("Replying... ACCES DENY IP:", acs.IPAccess, a.RemAddr)
           log.Println("INTERNAL ERROR NUMBER 111")
           return &tacplus.AuthenReply{Status: tacplus.AuthenStatusFail, ServerMsg: "ACCESS DENY. POINT 111"};
         }
@@ -110,15 +126,15 @@ func (t tacasHandler) HandleAuthenStart(ctx context.Context, a *tacplus.AuthenSt
           log.Println("Replying... ACCESS PERMIT", acs.PERMIT)
         }
 
-        if _, ok := t.UserCached["127.0.0.1"]; ok {
-             t.UserCached["127.0.0.1"][user] = acs  //s.LocalAddr()
+        if _, ok := t.UserCached[ip_req]; ok {
+             t.UserCached[ip_req][user] = acs  //s.LocalAddr()
         }else {
-             t.UserCached["127.0.0.1"] = tacasUserCachedNode{}
-             t.UserCached["127.0.0.1"][user] = acs
+             t.UserCached[ip_req] = tacasUserCachedNode{}
+             t.UserCached[ip_req][user] = acs
         }
      }
-     log.Println("Replying... ACCESS PERMIT status:", tacplus.AcctStatusSuccess)
-     return &tacplus.AuthenReply{Status: tacplus.AcctStatusSuccess, ServerMsg: t.Config.Banner.BannerAccept };
+     log.Println("Replying... ACCESS PERMIT status:", tacplus.AuthenStatusPass)
+     return &tacplus.AuthenReply{Status: tacplus.AuthenStatusPass, ServerMsg: t.Config.Banner.BannerAccept };
   } else {
      log.Println("Replying... ACCES DENY", tacplus.AuthenStatusFail)
      return &tacplus.AuthenReply{Status: tacplus.AuthenStatusFail, ServerMsg: t.Config.Banner.BannerReject};
@@ -126,17 +142,28 @@ func (t tacasHandler) HandleAuthenStart(ctx context.Context, a *tacplus.AuthenSt
   return &tacplus.AuthenReply{Status: tacplus.AuthenStatusFail, ServerMsg: t.Config.Banner.BannerReject};
 }
 
-func (t tacasHandler) HandleAuthorRequest(ctx context.Context, a *tacplus.AuthorRequest) *tacplus.AuthorResponse {
+func (t tacasHandler) HandleAuthorRequest(ctx context.Context, a *tacplus.AuthorRequest, s *tacplus.ServerSession) *tacplus.AuthorResponse {
+
+  ip_req_full := get_ip(s.RemoteAddr().String())
+  var ip_req string
+  if len(ip_req_full) > 0 {
+        ip_req = ip_req_full[0]
+  } else {
+        log.Println("Replying... ACCES DENY", tacplus.AuthenStatusFail)
+        log.Println("INTERNAL ERROR NUMBER 150")
+        return &tacplus.AuthorResponse{Status: tacplus.AuthenStatusFail, ServerMsg: "INTERNAL ERROR NUMBER 150"}; 
+  }
 
  if t.Config.LOG.DEBUG.ENABLE==true {
      log.Println("Author Request:",a.User, a.Port, a.RemAddr, strings.Join( a.Arg, ", "))
+     log.Println(s.RemoteAddr(),s.LocalAddr(),t.Config.PID)
  }
- if acs_ip, ok := t.UserCached["127.0.0.1"]; ok {
+ if acs_ip, ok := t.UserCached[ip_req]; ok {
   if acs, ok := acs_ip[a.User]; ok {
     privlvl :=""
     PERMIT := []string{}
     if config.LOG.DEBUG.ENABLE==true {
-        log.Println("ATH SEARCH in CHADES: ", t.UserCached["127.0.0.1"][a.User] );
+        log.Println("ATH SEARCH in CHADES: ", t.UserCached[ip_req][a.User] );
         for k, v := range  a.Arg {
             log.Println(k,v)
         }
@@ -231,14 +258,26 @@ func (t tacasHandler) HandleAuthorRequest(ctx context.Context, a *tacplus.Author
   return &tacplus.AuthorResponse{Status: tacplus.AuthorStatusPassAdd }; //, Arg: []string{"priv-lvl=15"} }; //tacplus.AuthorStatusFail}
 }
 
-func (t tacasHandler) HandleAcctRequest(ctx context.Context, a *tacplus.AcctRequest) *tacplus.AcctReply {
+func (t tacasHandler) HandleAcctRequest(ctx context.Context, a *tacplus.AcctRequest, s *tacplus.ServerSession) *tacplus.AcctReply {
+
+  ip_req_full := get_ip(s.RemoteAddr().String())
+  var ip_req string
+  if len(ip_req_full) > 0 {
+        ip_req = ip_req_full[0]
+  } else {
+        log.Println("Replying... ACCES DENY", tacplus.AuthenStatusFail)
+        log.Println("INTERNAL ERROR NUMBER 160")
+        return &tacplus.AcctReply{Status:  tacplus.AcctStatusError}
+  }
+
  if t.Config.LOG.DEBUG.ENABLE==true {
       log.Println("Acct Request")
+      log.Println(s.RemoteAddr(),s.LocalAddr(),t.Config.PID)
  }
- if acs_ip, ok := t.UserCached["127.0.0.1"]; ok {
+ if acs_ip, ok := t.UserCached[ip_req]; ok {
   if acs, ok := acs_ip[a.User]; ok {
     if config.LOG.DEBUG.ENABLE==true {
-        log.Println("ATH SEARCH in CHADES: ", t.UserCached["127.0.0.1"][a.User] );
+        log.Println("ATH SEARCH in CHADES: ", t.UserCached[ip_req][a.User] );
         for k, v := range  a.Arg {
             log.Println(k,v)
         }
@@ -274,7 +313,7 @@ func (t tacasHandler) HandleAcctRequest(ctx context.Context, a *tacplus.AcctRequ
         if _ , ok := arg_parsing["service"]; ok {
             if _, ok := arg_parsing["disc-cause"]; ok {
                 if arg_parsing["service"]=="shell" && arg_parsing["disc-cause"]=="1" {
-                    delete(t.UserCached["127.0.0.1"],a.User);
+                    delete(t.UserCached[ip_req],a.User);
                 }
             }
         }
