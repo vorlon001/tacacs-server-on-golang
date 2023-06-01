@@ -1,0 +1,52 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [
+          '1.20',
+          '1.19',
+          '1.18',
+          '1.17',
+          '1.16',
+          '1.15',
+          '1.14',
+        ]
+        branch: [ '.', './v3' ]
+    name: Go ${{ matrix.go }}.x PR Validate ${{ matrix.branch }} (Modules)
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: Version
+      run: go version
+
+    - name: Build and Validate
+      run: |
+        cd ${{ matrix.branch }}
+        go vet .
+        go test .
+        go test -cover -race -cpu 1,2,4 .
+        go build .
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3.2.0
+        with:
+          version: v1.50.0
+          only-new-issues: true

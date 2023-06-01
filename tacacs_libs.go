@@ -18,6 +18,11 @@ type tacasHandler struct{
 	UserCached tacasUserCached
 }
 
+func get_ip(ip string) []string {
+   log.Printf("get_ip(%#v)",ip)
+   return []string{ip}
+}
+
 func (t tacasHandler) HandleAuthenStart(ctx context.Context, a *tacplus.AuthenStart, s *tacplus.ServerSession) *tacplus.AuthenReply {
 
   ip_req_full := get_ip(s.RemoteAddr().String())

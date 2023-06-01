@@ -1,9 +1,9 @@
-# tacacs-server version 1.01
+# tacacs-server version 1.02
 example tacacs server on golang
 
 Seample tacacs server on GoLang
- - build and testing  on 1.14.4
-
+ - build and testing  on 1.20.xx
+ - version 1.02 need testing
 use
  - https://github.com/sevlyar/go-daemon
  - https://github.com/jtblin/go-ldap-client

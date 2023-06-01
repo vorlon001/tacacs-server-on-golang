@@ -18,9 +18,12 @@ build:
 	@echo "BUILD"
 	@export GOPATH=$GOPATH:$(PWDSRC)
 	@echo "VARS MAKE: $(GOLANG) $(PWDSRC) $(GOPATH)"
-	@$(GOLANG) get gopkg.in/ldap.v3
+	@$(GOLANG) get github.com/go-ldap/ldap/v3
+#	@$(GOLANG) get gopkg.in/ldap.v3
+	@$(GOLANG) get github.com/go-ldap/ldap/v3
 	@$(GOLANG) get golang.org/x/sys/unix
 	@$(GOLANG) get gopkg.in/yaml.v2
+	@go get module/go-daemon
 #	@cd ./src/core/utils/; $(GOLANG) build utils.go; $(GOLANG) install;
 #	@cd ./src/core/logs/; $(GOLANG) build logs.go; $(GOLANG) install;
 	@cd ./src/module/go-daemon/; $(GOLANG) build .; $(GOLANG) install;

@@ -6,7 +6,10 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"gopkg.in/ldap.v3"
+//	"gopkg.in/ldap.v3"
+//       "github.com/go-ldap/ldap/v3"
+        "ldap"
+
 )
 
 type LDAP_NODE struct {
