@@ -8,7 +8,7 @@ import (
 	"fmt"
 //	"gopkg.in/ldap.v3"
 //       "github.com/go-ldap/ldap/v3"
-        "ldap"
+        "github.com/vorlon001/tacacs-server-on-golang/pkg/ldap"
 
 )
 

@@ -2,8 +2,8 @@ package main
 
 import (
         "regexp"
-	"module/ldap-client"
-	configure "module/config"
+	"github.com/vorlon001/tacacs-server-on-golang/pkg/module/ldap-client"
+	configure "github.com/vorlon001/tacacs-server-on-golang/pkg/module/config"
 	"log"
 	"os"
 	"fmt"

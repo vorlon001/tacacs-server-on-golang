@@ -1,8 +1,8 @@
 package main
 
 import (
-        "module/tacplus"
-	configure "module/config"
+        "github.com/vorlon001/tacacs-server-on-golang/pkg/module/tacplus"
+	configure "github.com/vorlon001/tacacs-server-on-golang/pkg/module/config"
 	"log"
 	"fmt"
 	"strconv"

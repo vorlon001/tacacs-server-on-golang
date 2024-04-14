@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 	"regexp"
-	configure "module/config"
+	configure "github.com/vorlon001/tacacs-server-on-golang/pkg/module/config"
 )
 
 const (
